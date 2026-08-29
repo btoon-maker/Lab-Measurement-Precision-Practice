@@ -28,10 +28,11 @@ main{max-width:1180px;margin:auto;padding:25px 18px 70px}.screen{display:none}.s
 <script>
 (()=>{'use strict';
 const KEY='labMeasurementPractice.v1';
+const BAL_FRONT=2.45, BAL_TOTAL=372.45, BAL_TOL=0.011;
 const P=[
 {id:'c100',type:'cyl',tag:'Graduated cylinder',title:'100 mL graduated cylinder',intro:'Read the liquid volume and report it with the precision supported by this scale.',max:100,minor:1,major:10,value:63.7,inc:'1',prec:'tenths',tol:.11,text:'A 100 mL graduated cylinder is numbered every 10 mL and has ten equal spaces between numbered values. The water-like liquid forms a concave meniscus. The bottom of the meniscus is between 63 mL and 64 mL, about seven-tenths of the way from 63 toward 64.',hint:'Count the equal spaces between two numbered marks. Then read the bottom of the meniscus. Because the smallest graduation is 1 mL, estimate one additional digit.',take:'1 mL graduations support estimating to the nearest 0.1 mL.'},
 {id:'c10',type:'cyl',tag:'Graduated cylinder',title:'10 mL graduated cylinder',intro:'This smaller cylinder has finer graduations. Read it carefully and report the extra precision it supports.',max:10,minor:.1,major:1,value:6.73,inc:'0.1',prec:'hundredths',tol:.021,text:'A 10 mL graduated cylinder is numbered every 1 mL and has ten equal spaces between numbered values. The bottom of the concave meniscus is between 6.7 mL and 6.8 mL, a little less than one-third of the way from 6.7 toward 6.8.',hint:'The smallest marked graduation is 0.1 mL. For this analog cylinder, estimate one more digit beyond the 0.1 mL marks.',take:'0.1 mL graduations support estimating to the nearest 0.01 mL.'},
-{id:'bal',type:'bal',tag:'Mass measurement',title:'Triple-beam balance',intro:'Read each rider, then combine the three beam values to determine the total mass.',beams:[300,70,2.45],total:372.45,text:'The 500 g beam rider is aligned with 300 g. The 100 g beam rider is aligned with 70 g. The 10 g beam rider is aligned at about 2.45 g. The smallest front-beam increment is 0.1 g, so one additional estimated digit may be recorded.',hint:'Read each beam separately before adding. The smallest marked increment on the front beam is 0.1 g, so include one estimated digit when appropriate.',take:'Add the three beam values and record the result in grams. Because the front beam is marked every 0.1 g, a careful analog reading may be reported to the 0.01 g place.'},
+{id:'bal',type:'bal',tag:'Mass measurement',title:'Triple-beam balance',intro:'Read each rider, then combine the three beam values to determine the total mass.',beams:[300,70,2.45],total:372.45,text:'The 500 g beam rider is aligned with 300 g. The 100 g beam rider is aligned with 70 g. The 10 g beam rider is aligned at about '+BAL_FRONT+' g. The smallest front-beam increment is 0.1 g, so one additional estimated digit may be recorded.',hint:'Read each beam separately before adding. The smallest marked increment on the front beam is 0.1 g, so include one estimated digit when appropriate.',take:'Add the three beam values and record the result in grams. Because the front beam is marked every 0.1 g, a careful analog reading may be reported to the 0.01 g place.'},
 {id:'flask',type:'flask',tag:'Equipment judgment',title:'Choosing the right equipment',intro:'An Erlenmeyer flask can hold and mix liquids, but should it be used for a precise volume such as 43.6 mL?',text:'An Erlenmeyer flask is shown with broad approximate volume markings. Its markings are much farther apart than those on a graduated cylinder. The flask is designed mainly for holding, swirling, mixing, and heating liquids rather than precise volume measurement.',hint:'Ask what each tool measures and how finely its scale is marked. A triple-beam balance measures mass, not liquid volume.',take:'Use a graduated cylinder when a liquid volume must be measured more precisely than an Erlenmeyer flask can support.'}
 ];
 function freshMetrics(){return {version:1,problems:P.map(p=>({id:p.id,type:p.type,checks:0,incorrectChecks:0,hints:0,completed:false,errorTypes:{}}))}}
@@ -83,7 +84,31 @@ function cylSvg(p,close=false){
     `</svg>`;
 }
 
-function balanceSvg(){
+function balanceSvg(close=false){
+  if(close){
+    const W=820,H=300,x0=120,x1=700,y=148,start=2,end=3;
+    const scaleX=v=>x0+(v-start)/(end-start)*(x1-x0),rx=scaleX(BAL_FRONT);
+    let ticks='';
+    for(let i=0;i<=10;i++){
+      const v=start+i*0.1,x=scaleX(v);
+      ticks+=`<line x1="${x}" y1="${y-8}" x2="${x}" y2="${y+24}" stroke="#2a2725" stroke-width="2.4"/>`+
+             `<text x="${x}" y="${y+50}" text-anchor="middle" font-size="16" fill="#211e1e">${v.toFixed(1)}</text>`;
+    }
+    for(let i=0;i<10;i++){
+      const v=start+i*0.1+0.05,x=scaleX(v);
+      ticks+=`<line x1="${x}" y1="${y-4}" x2="${x}" y2="${y+14}" stroke="#6b6661" stroke-width="1.4"/>`;
+    }
+    return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Enlarged close-up of the triple-beam balance front beam from 2.0 g to 3.0 g">`+
+      `<rect width="${W}" height="${H}" fill="#fff"/>`+
+      `<text x="410" y="38" text-anchor="middle" font-size="22" font-weight="900" fill="#4f0f24">Front beam close-up</text>`+
+      `<text x="410" y="60" text-anchor="middle" font-size="14" fill="#5f5956">0.1 g marked increments on the front beam</text>`+
+      `<line x1="${x0}" y1="${y}" x2="${x1}" y2="${y}" stroke="#2a2725" stroke-width="5"/>`+
+      `${ticks}`+
+      `<path d="M${rx-12} ${y-56}L${rx+12} ${y-56}L${rx+8} ${y-26}L${rx-8} ${y-26}Z" fill="#ffc627" stroke="#4f0f24" stroke-width="3"/>`+
+      `<line x1="${rx}" y1="${y-26}" x2="${rx}" y2="${y+26}" stroke="#4f0f24" stroke-width="2.8"/>`+
+      `<text x="410" y="260" text-anchor="middle" font-size="14" fill="#5f5956">Use the rider index line to judge the reading between the nearest 0.1 g marks.</text>`+
+      `</svg>`;
+  }
   const W=820,H=500,x0=185,x1=740,Y=[120,245,370];
   function beam(y,max,step,val,label,labelStep){
     let s=`<text x="30" y="${y-12}" font-size="18" font-weight="800" fill="#4f0f24">${label}</text>`+
@@ -95,15 +120,15 @@ function balanceSvg(){
       if(maj)s+=`<text x="${x}" y="${y+40}" text-anchor="middle" font-size="14" fill="#211e1e">${(+v.toFixed(1))}</text>`;
     }
     const rx=x0+val/max*(x1-x0);
-    return s+`<path d="M${rx-15} ${y-40}L${rx+15} ${y-40}L${rx+9} ${y-8}L${rx-9} ${y-8}Z" fill="#ffc627" stroke="#4f0f24" stroke-width="3"/>`+
-            `<line x1="${rx}" y1="${y-8}" x2="${rx}" y2="${y+20}" stroke="#4f0f24" stroke-width="3"/>`;
+    return s+`<path d="M${rx-12} ${y-38}L${rx+12} ${y-38}L${rx+8} ${y-14}L${rx-8} ${y-14}Z" fill="#ffc627" stroke="#4f0f24" stroke-width="3"/>`+
+            `<line x1="${rx}" y1="${y-14}" x2="${rx}" y2="${y+20}" stroke="#4f0f24" stroke-width="2.4"/>`;
   }
   return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Triple-beam balance with riders on three marked beams">`+
     `<rect width="${W}" height="${H}" fill="#fcfbf8"/>`+
     `<text x="410" y="43" text-anchor="middle" font-size="24" font-weight="900" fill="#4f0f24">Triple-beam balance</text>`+
     `${beam(Y[0],500,100,300,'500 g beam',100)}`+
     `${beam(Y[1],100,10,70,'100 g beam',10)}`+
-    `${beam(Y[2],10,.1,2.45,'10 g beam',1)}`+
+    `${beam(Y[2],10,.1,BAL_FRONT,'10 g beam',1)}`+
     `<text x="410" y="455" text-anchor="middle" font-size="16" fill="#5f5956">Read each rider, then add the beam values.</text>`+
     `</svg>`;
 }
@@ -119,7 +144,7 @@ function flaskSvg(){
     `</svg>`;
 }
 
-function visual(p){q('#visual').innerHTML=p.type==='cyl'?cylSvg(p):p.type==='bal'?balanceSvg():flaskSvg();q('#zoom').innerHTML=p.type==='cyl'?cylSvg(p,true):p.type==='bal'?balanceSvg():flaskSvg()}
+function visual(p){q('#visual').innerHTML=p.type==='cyl'?cylSvg(p):p.type==='bal'?balanceSvg():flaskSvg();q('#zoom').innerHTML=p.type==='cyl'?cylSvg(p,true):p.type==='bal'?balanceSvg(true):flaskSvg()}
 function legend(n,t){return `<legend><span class="n" aria-hidden="true">${n}</span>${t}</legend>`}
 
 function cylSteps(p,a={}){return `<fieldset class="step">${legend(1,'Identify the scale')}<label for="increment">What does the smallest marked graduation represent?</label><select id="increment" name="increment"><option value="">Choose one</option>${['10','5','2','1','0.5','0.1','0.01'].map(v=>`<option value="${v}" ${a.increment===v?'selected':''}>${v} mL</option>`).join('')}</select><p class="help">Use the numbered values and count the equal spaces between them.</p></fieldset><fieldset class="step">${legend(2,'Choose the reading point')}<div class="radios">${[['top','Top of the meniscus'],['bottom','Bottom of the meniscus'],['middle','Middle of the liquid surface']].map(([v,l])=>`<label class="radio"><input type="radio" name="readPoint" value="${v}" ${a.readPoint===v?'checked':''}><span>${l}</span></label>`).join('')}</div><p class="help">This practice uses water-like liquids that form a concave meniscus.</p></fieldset><fieldset class="step">${legend(3,'Record the measurement')}<div class="two"><div><label for="measurement">Measurement (include your estimated digit)</label><input id="measurement" name="measurement" type="text" inputmode="decimal" value="${a.measurement||''}"></div><div><label for="unit">Unit</label><select id="unit" name="unit"><option value="">Choose</option>${['mL','L','g','°C'].map(v=>`<option ${a.unit===v?'selected':''}>${v}</option>`).join('')}</select></div></div><p class="help">Enter the measurement the instrument supports, including your estimated digit.</p></fieldset><fieldset class="step">${legend(4,'Explain the precision')}<label for="precision">To what place should this graduated-cylinder measurement be reported?</label><select id="precision" name="precision"><option value="">Choose one</option><option value="ones" ${a.precision==='ones'?'selected':''}>1 mL (ones place)</option><option value="tenths" ${a.precision==='tenths'?'selected':''}>0.1 mL (tenths place)</option><option value="hundredths" ${a.precision==='hundredths'?'selected':''}>0.01 mL (hundredths place)</option><option value="thousandths" ${a.precision==='thousandths'?'selected':''}>0.001 mL (thousandths place)</option></select><p class="help">For an analog graduated cylinder, use the certain digits and include one estimated digit beyond the smallest graduation.</p></fieldset>`}
@@ -131,10 +156,10 @@ function render(){const p=P[S.current],a=S.results[p.id]?.a||{},m=metricFor(p.id
 function answers(){const f=new FormData(q('#form')),a={};for(const [k,v] of f.entries())a[k]=String(v).trim();return a}function num(v){const n=Number(String(v).replace(/,/g,''));return Number.isFinite(n)?n:NaN}
 
 function checkC(p,a,ntry){const x=[];if(a.increment!==p.inc)x.push(ntry<2?'Step 1: Recount the equal spaces between two numbered marks.':`Step 1: The smallest marked graduation is ${p.inc} mL.`);if(a.readPoint!=='bottom')x.push(ntry<2?'Step 2: Reconsider which part of a concave meniscus is read for the water-like liquid shown.':'Step 2: Read the bottom of the concave meniscus.');if(!Number.isFinite(num(a.measurement))||Math.abs(num(a.measurement)-p.value)>p.tol)x.push(ntry<2?'Step 3: Recheck where the bottom of the meniscus falls between the nearest graduations, then include your estimated digit.':'Step 3: A reasonable reading here is near '+p.value+' mL, including an estimated digit.');if(a.unit!=='mL')x.push('Step 3: The unit is milliliters (mL).');if(a.precision!==p.prec)x.push(ntry<2?'Step 4: Start with the smallest graduation and estimate one additional digit.':`Step 4: Report this reading to the ${p.prec} place.`);return x}
-function checkB(a,ntry){const x=[];if(num(a.b1)!==300)x.push(ntry<2?'Step 1: Recheck the 500 g beam rider.':'Step 1: The 500 g beam reads 300 g.');if(num(a.b2)!==70)x.push(ntry<2?'Step 2: Recheck the 100 g beam rider.':'Step 2: The 100 g beam reads 70 g.');if(Math.abs(num(a.b3)-2.45)>.06)x.push(ntry<2?'Step 3: Recheck the front beam. The smallest marked increment is 0.1 g, so read the tenths shown and include one estimated digit.':'Step 3: A careful reading of the front beam is about 2.45 g.');if(Math.abs(num(a.measurement)-372.45)>.06)x.push(ntry<2?'Step 4: Add the three rider values and include the precision supported by the analog front beam.':'Step 4: The total mass is about 372.45 g.');if(a.unit!=='g')x.push('Step 4: A triple-beam balance measures mass in grams (g) here.');if(a.precision!=='hundredths')x.push('Step 5: Because the front beam is marked every 0.1 g on an analog scale, the final reported mass should include one estimated digit and be recorded to 0.01 g.');return x}
+function checkB(a,ntry){const x=[];if(num(a.b1)!==300)x.push(ntry<2?'Step 1: Recheck the 500 g beam rider.':'Step 1: The 500 g beam reads 300 g.');if(num(a.b2)!==70)x.push(ntry<2?'Step 2: Recheck the 100 g beam rider.':'Step 2: The 100 g beam reads 70 g.');if(Math.abs(num(a.b3)-BAL_FRONT)>BAL_TOL)x.push(ntry<2?'Step 3: Recheck the front beam. The smallest marked increment is 0.1 g, so read the tenths shown and include one estimated digit.':'Step 3: A careful reading of the front beam is about '+BAL_FRONT+' g.');if(Math.abs(num(a.measurement)-BAL_TOTAL)>BAL_TOL)x.push(ntry<2?'Step 4: Add the three rider values and include the precision supported by the analog front beam.':'Step 4: The total mass is about '+BAL_TOTAL+' g.');if(a.unit!=='g')x.push('Step 4: A triple-beam balance measures mass in grams (g) here.');if(a.precision!=='hundredths')x.push('Step 5: Because the front beam is marked every 0.1 g on an analog scale, the final reported mass should include one estimated digit and be recorded to 0.01 g.');return x}
 function checkF(a,ntry){const x=[];if(a.precise!=='no')x.push(ntry<2?'Step 1: Ask whether broad flask markings can justify a value as specific as 43.6 mL.':'Step 1: No. Erlenmeyer flask markings are approximate.');if(a.tool!=='cylinder')x.push(a.tool==='balance'?'Step 2: A triple-beam balance measures mass, not volume.':ntry<2?'Step 2: Choose the tool designed for liquid volume with finer graduations.':'Step 2: A graduated cylinder is the better choice.');return x}
 function feedback(kind,title,items,extra){const b=q('#feedback');b.hidden=false;b.className='feedback '+kind;b.innerHTML=`<div class="fbhead"><span class="fbicon" aria-hidden="true">${kind==='good'?'✓':'✕'}</span><span>${title}</span></div>${items.length?`<ul>${items.map(i=>`<li>${i}</li>`).join('')}</ul>`:''}${extra?`<p>${extra}</p>`:''}`;b.scrollIntoView({block:'nearest'})}
-function diagnosticErrors(p,a){const e=new Set();if(p.type==='cyl'){if(a.increment!==p.inc)e.add('graduation_size');if(a.readPoint!=='bottom')e.add('meniscus_reference_point');if(!Number.isFinite(num(a.measurement))||Math.abs(num(a.measurement)-p.value)>p.tol)e.add('measurement_value');if(a.unit!=='mL')e.add('measurement_unit');if(a.precision!==p.prec)e.add('reported_precision')}else if(p.type==='bal'){if(num(a.b1)!==300||num(a.b2)!==70||Math.abs(num(a.b3)-2.45)>.06)e.add('beam_reading');if(Math.abs(num(a.measurement)-372.45)>.06)e.add('mass_total');if(a.unit!=='g')e.add('measurement_unit');if(a.precision!=='hundredths')e.add('reported_precision')}else{if(a.precise!=='no')e.add('equipment_reasoning');if(a.tool!=='cylinder')e.add('equipment_choice')}return [...e]}
+function diagnosticErrors(p,a){const e=new Set();if(p.type==='cyl'){if(a.increment!==p.inc)e.add('graduation_size');if(a.readPoint!=='bottom')e.add('meniscus_reference_point');if(!Number.isFinite(num(a.measurement))||Math.abs(num(a.measurement)-p.value)>p.tol)e.add('measurement_value');if(a.unit!=='mL')e.add('measurement_unit');if(a.precision!==p.prec)e.add('reported_precision')}else if(p.type==='bal'){if(num(a.b1)!==300||num(a.b2)!==70||Math.abs(num(a.b3)-BAL_FRONT)>BAL_TOL)e.add('beam_reading');if(Math.abs(num(a.measurement)-BAL_TOTAL)>BAL_TOL)e.add('mass_total');if(a.unit!=='g')e.add('measurement_unit');if(a.precision!=='hundredths')e.add('reported_precision')}else{if(a.precise!=='no')e.add('equipment_reasoning');if(a.tool!=='cylinder')e.add('equipment_choice')}return [...e]}
 
 q('#form').addEventListener('submit',e=>{e.preventDefault();const p=P[S.current],a=answers(),m=metricFor(p.id);S.attempts[p.id]=(S.attempts[p.id]||0)+1;const n=S.attempts[p.id],issues=p.type==='cyl'?checkC(p,a,n):p.type==='bal'?checkB(a,n):checkF(a,n);m.checks++;if(issues.length){m.incorrectChecks++;for(const type of diagnosticErrors(p,a))m.errorTypes[type]=(m.errorTypes[type]||0)+1;q('#hintBtn').hidden=false}else m.completed=true;S.results[p.id]={...(S.results[p.id]||{}),a,attempts:n,done:issues.length===0};save();if(!issues.length){progress();q('#nextBtn').disabled=false;feedback('good','Correct — measurement reasoning complete.',[],p.take)}else feedback('bad','Not yet — check these parts of your reasoning.',issues,n===1?'Use the hint, enlarged view, or text version if you need another look.':'Revise the steps above, then check again.')});
 function complete(){return P.every(p=>S.results[p.id]?.done)}
